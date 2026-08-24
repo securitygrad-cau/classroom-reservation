@@ -1,4 +1,4 @@
-const BASE = "https://classroom-reservation-production.up.railway.app/api";
+   const BASE = "https://classroom-reservation-backend.vercel.app/api";
 
 export async function getRooms() {
   const res = await fetch(`${BASE}/rooms`);
