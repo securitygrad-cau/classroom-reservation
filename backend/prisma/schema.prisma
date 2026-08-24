@@ -1,0 +1,62 @@
+// ─────────────────────────────────────────────
+// 강의실 대여 시스템 DB 스키마
+// 개발: SQLite (설정 없이 바로 실행 가능)
+// 운영 전환 시: provider를 "postgresql"로 바꾸고
+// DATABASE_URL만 교체하면 됩니다.
+// ─────────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 강의실 정보
+model Room {
+  id           Int           @id @default(autoincrement())
+  name         String        @unique   // "506호", "512호", "B1 105-1호", "721호"
+  building     String?                 // 필요 시 건물명
+  order        Int           @default(0) // 시간표 화면에서 컬럼 정렬 순서
+  reservations Reservation[]
+}
+
+// 예약(신청) 정보
+model Reservation {
+  id             Int       @id @default(autoincrement())
+  roomId         Int
+  room           Room      @relation(fields: [roomId], references: [id])
+
+  date           String    // "2026-08-12" (YYYY-MM-DD)
+  startSlot      Int       // 0~47 (00:00을 0, 30분당 +1, 23:30이 47)
+  endSlot        Int       // 종료 slot (exclusive, 즉 1개 슬롯 예약이면 startSlot+1)
+
+  // 신청자 정보
+  requesterName  String
+  affiliation    String    // "학생" | "교수" | "교직원" (텍스트로 저장, 프론트에서 select)
+  department     String?   // 소속 학과 (선택)
+  purpose        String    // 사용 목적
+  contact        String    // 연락처(전화/이메일)
+
+  // 승인 관련
+  status         String    @default("PENDING") // PENDING | APPROVED | REJECTED
+  isPriority     Boolean   @default(false)      // 교수 요청 등 우선순위 표시(조교가 목록에서 우선 검토)
+  reviewNote     String?                        // 거절 사유 등 관리자 메모
+  reviewedAt     DateTime?
+
+  createdAt      DateTime  @default(now())
+
+  @@index([roomId, date])
+  @@index([status])
+}
+
+// 관리자(조교) 계정 - 간단한 로그인용
+model Admin {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
+}
