@@ -35,8 +35,8 @@ model Reservation {
 
   // 신청자 정보
   requesterName  String
-  affiliation    String    // "학생" | "교수" | "교직원" (텍스트로 저장, 프론트에서 select)
-  department     String?   // 소속 학과 (선택)
+  affiliation    String    // "학부생" | "대학원생" | "교수" | "교직원" (텍스트로 저장, 프론트에서 select)
+  department     String   // 소속 학과
   purpose        String    // 사용 목적
   contact        String    // 연락처(전화/이메일)
 
