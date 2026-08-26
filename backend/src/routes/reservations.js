@@ -56,7 +56,7 @@ router.post("/", async (req, res) => {
   } = req.body;
 
   // 1) 입력 검증
-  if (!roomId || !date || !requesterName || !affiliation || !purpose || !contact) {
+  if (!roomId || !date || !requesterName || !affiliation || !department || !purpose || !contact) {
     return res.status(400).json({ error: "필수 항목이 누락되었습니다." });
   }
   if (!isValidSlotRange(startSlot, endSlot)) {
