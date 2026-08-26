@@ -1,4 +1,5 @@
 import { Router } from "express";
+import bcrypt from "bcryptjs";
 import { prisma } from "../db.js";
 import { isOverlapping, isValidSlotRange } from "../utils/timeSlots.js";
 import { getAdminFromRequest } from "../utils/auth.js";
@@ -11,6 +12,7 @@ const router = Router();
 //
 // 개인정보 보호: 관리자 토큰이 없는 일반 요청은 이름/소속/연락처를 제외하고
 // 상태(status)와 사용 목적(purpose)만 내려준다. 관리자 토큰이 있으면 전체 정보를 내려준다.
+// cancelPasswordHash는 어떤 경우에도(관리자 포함) 응답에 포함하지 않는다.
 router.get("/", async (req, res) => {
   const { date } = req.query;
   if (!date) return res.status(400).json({ error: "date 쿼리 파라미터가 필요합니다." });
@@ -24,10 +26,12 @@ router.get("/", async (req, res) => {
   });
 
   if (isAdmin) {
-    return res.json(reservations);
+    const shaped = reservations.map(({ cancelPasswordHash, ...r }) => r);
+    return res.json(shaped);
   }
 
   // 일반 사용자용: 개인정보(이름/소속/연락처) 제거, 상태+목적만 노출
+  // id는 유지 → 본인이 예약 취소를 신청할 때 어떤 예약인지 식별하는 용도로 필요
   const publicShaped = reservations.map((r) => ({
     id: r.id,
     roomId: r.roomId,
@@ -36,6 +40,7 @@ router.get("/", async (req, res) => {
     endSlot: r.endSlot,
     status: r.status,
     purpose: r.purpose,
+    hasCancelPassword: !!r.cancelPasswordHash, // 비밀번호 설정 여부만 알려줌(값 자체는 절대 노출 안 함)
   }));
   res.json(publicShaped);
 });
@@ -53,6 +58,7 @@ router.post("/", async (req, res) => {
     department,
     purpose,
     contact,
+    cancelPassword, // 선택 입력: 입력하면 본인이 나중에 이 비밀번호로 직접 취소 가능
   } = req.body;
 
   // 1) 입력 검증
@@ -78,6 +84,9 @@ router.post("/", async (req, res) => {
   // 3) 교수 요청은 우선순위 플래그 자동 부여 (조교가 승인 목록에서 우선 검토하도록)
   const isPriority = affiliation === "교수";
 
+  // 4) 취소용 비밀번호는 입력한 경우에만 해시로 저장 (평문 저장 절대 금지)
+  const cancelPasswordHash = cancelPassword ? await bcrypt.hash(cancelPassword, 10) : null;
+
   const reservation = await prisma.reservation.create({
     data: {
       roomId,
@@ -89,12 +98,51 @@ router.post("/", async (req, res) => {
       department,
       purpose,
       contact,
+      cancelPasswordHash,
       isPriority,
       status: "PENDING",
     },
   });
 
-  res.status(201).json(reservation);
+  const { cancelPasswordHash: _omit, ...safeReservation } = reservation;
+  res.status(201).json(safeReservation);
+});
+
+// POST /api/reservations/:id/cancel - 신청자 본인이 비밀번호로 직접 취소
+// 관리자 로그인 없이도 호출 가능하지만, 예약 생성 시 설정해둔 비밀번호와 일치해야만 처리된다.
+router.post("/:id/cancel", async (req, res) => {
+  const id = Number(req.params.id);
+  const { password } = req.body;
+
+  const target = await prisma.reservation.findUnique({ where: { id } });
+  if (!target) return res.status(404).json({ error: "예약을 찾을 수 없습니다." });
+
+  if (!["PENDING", "APPROVED"].includes(target.status)) {
+    return res.status(400).json({ error: "이미 처리되었거나 취소된 예약입니다." });
+  }
+
+  if (!target.cancelPasswordHash) {
+    return res
+      .status(400)
+      .json({ error: "이 예약은 취소용 비밀번호가 설정되어 있지 않습니다. 학과 사무실로 문의해주세요." });
+  }
+
+  const valid = await bcrypt.compare(password || "", target.cancelPasswordHash);
+  if (!valid) {
+    return res.status(401).json({ error: "비밀번호가 일치하지 않습니다." });
+  }
+
+  const cancelled = await prisma.reservation.update({
+    where: { id },
+    data: {
+      status: "CANCELLED",
+      reviewedAt: new Date(),
+      reviewNote: "신청자 본인이 취소함",
+    },
+  });
+
+  const { cancelPasswordHash: _omit, ...safeCancelled } = cancelled;
+  res.json(safeCancelled);
 });
 
 export default router;
