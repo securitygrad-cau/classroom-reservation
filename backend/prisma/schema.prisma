@@ -53,7 +53,7 @@ model Reservation {
 
   @@index([roomId, date])
   @@index([status])
-  @@index([createdAt]) // 6개월 경과 데이터 정리(cron) 조회용
+  @@index([date]) // 6개월 경과(사용일 기준) 데이터 정리(cron) 조회용 — roomId+date 인덱스와 별개로 date 단독 조회도 빠르게
 }
 
 // 관리자(조교) 계정 - 간단한 로그인용
