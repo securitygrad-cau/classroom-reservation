@@ -36,20 +36,24 @@ model Reservation {
   // 신청자 정보
   requesterName  String
   affiliation    String    // "학부생" | "대학원생" | "교수" | "교직원" (텍스트로 저장, 프론트에서 select)
-  department     String   // 소속 학과
+  department     String    // 소속 학과
   purpose        String    // 사용 목적
-  contact        String    // 연락처(전화/이메일)
+  contact        String    // 학번 또는 내선번호
+
+  // 본인 취소용 비밀번호 (선택 입력). 입력했을 경우에만 채워지며 bcrypt 해시로 저장됨.
+  cancelPasswordHash String?
 
   // 승인 관련
-  status         String    @default("PENDING") // PENDING | APPROVED | REJECTED
+  status         String    @default("PENDING") // PENDING | APPROVED | REJECTED | CANCELLED
   isPriority     Boolean   @default(false)      // 교수 요청 등 우선순위 표시(조교가 목록에서 우선 검토)
-  reviewNote     String?                        // 거절 사유 등 관리자 메모
+  reviewNote     String?                        // 거절/취소 사유 등 관리자 메모
   reviewedAt     DateTime?
 
   createdAt      DateTime  @default(now())
 
   @@index([roomId, date])
   @@index([status])
+  @@index([createdAt]) // 6개월 경과 데이터 정리(cron) 조회용
 }
 
 // 관리자(조교) 계정 - 간단한 로그인용
