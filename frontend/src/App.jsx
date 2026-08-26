@@ -1,8 +1,14 @@
 import React, { useEffect, useState } from "react";
 import Timetable from "./components/Timetable.jsx";
 import ReservationModal from "./components/ReservationModal.jsx";
+import CancelModal from "./components/CancelModal.jsx";
 import AdminPanel from "./components/AdminPanel.jsx";
-import { createReservation, getReservations, getRooms } from "./api.js";
+import {
+  createReservation,
+  getReservations,
+  getRooms,
+  cancelReservationByUser,
+} from "./api.js";
 
 function todayStr() {
   const d = new Date();
@@ -16,6 +22,7 @@ export default function App() {
   const [reservations, setReservations] = useState([]);
   const [selection, setSelection] = useState(null); // {roomId, startSlot, endSlot}
   const [modalOpen, setModalOpen] = useState(false);
+  const [cancelTarget, setCancelTarget] = useState(null); // 취소 모달에 띄울 예약
 
   // 관리자 로그인 상태를 최상위(App)에서 관리한다.
   // → 시간표(예약 신청 탭)를 그릴 때도 로그인 여부를 알아야
@@ -50,6 +57,12 @@ export default function App() {
     await createReservation({ ...form, ...selection, date });
     setSelection(null);
     setModalOpen(false);
+    await loadReservations();
+  }
+
+  async function handleCancelReservation(password) {
+    await cancelReservationByUser(cancelTarget.id, password);
+    setCancelTarget(null);
     await loadReservations();
   }
 
@@ -94,11 +107,16 @@ export default function App() {
             </div>
           </div>
 
+          <p className="text-xs text-gray-500 mb-2">
+            승인 대기 중/예약 확정 칸을 클릭하면 취소용 비밀번호를 입력해 본인이 직접 취소할 수 있습니다.
+          </p>
+
           <Timetable
             rooms={rooms}
             reservations={reservations}
             selection={selection}
             onCellClick={handleCellClick}
+            onReservedCellClick={setCancelTarget}
           />
 
           {selection && (
@@ -119,6 +137,14 @@ export default function App() {
               endSlot={selection.endSlot}
               onClose={() => setModalOpen(false)}
               onSubmit={handleSubmitReservation}
+            />
+          )}
+
+          {cancelTarget && (
+            <CancelModal
+              reservation={cancelTarget}
+              onClose={() => setCancelTarget(null)}
+              onSubmit={handleCancelReservation}
             />
           )}
         </>
