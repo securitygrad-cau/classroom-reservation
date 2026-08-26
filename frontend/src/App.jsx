@@ -57,7 +57,7 @@ export default function App() {
 
   return (
     <div className="max-w-5xl mx-auto p-4 pb-20">
-      <h1 className="text-xl font-bold mb-4">융합보안학과 강의실 예약</h1>
+      <h1 className="text-xl font-bold mb-4">산업보안학과/융합보안학과 강의실 예약</h1>
 
       <div className="flex gap-2 mb-4">
         <button
@@ -135,7 +135,7 @@ export default function App() {
 
       {/* 하단 고정 문의사항 안내 */}
       <footer className="fixed bottom-0 left-0 w-full bg-gray-800 text-white text-center text-sm py-2 z-40">
-        문의사항: 융합보안학과 사무실 (02-820-5730)
+        문의사항: 산업보안학과/융합보안학과 사무실 (02-820-5730)
       </footer>
     </div>
   );
