@@ -93,12 +93,12 @@ export default function ReservationModal({ roomName, startSlot, endSlot, onSubmi
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">연락처 *</label>
+            <label className="block text-sm font-medium mb-1">학번 또는 내선번호 *</label>
             <input
               className="w-full border rounded px-3 py-2"
               value={form.contact}
               onChange={(e) => update("contact", e.target.value)}
-              placeholder="전화번호 또는 이메일"
+              placeholder="예: 20231234 또는 1234"
             />
           </div>
 
