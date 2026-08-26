@@ -1,4 +1,4 @@
-   const BASE = "https://classroom-reservation-backend.vercel.app/api";
+const BASE = "https://classroom-reservation-backend.vercel.app/api";
 
 export async function getRooms() {
   const res = await fetch(`${BASE}/rooms`);
@@ -21,6 +21,18 @@ export async function createReservation(payload) {
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || "예약 신청에 실패했습니다.");
+  return data;
+}
+
+// 신청자 본인이 비밀번호로 자신의 예약을 취소
+export async function cancelReservationByUser(id, password) {
+  const res = await fetch(`${BASE}/reservations/${id}/cancel`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "예약 취소에 실패했습니다.");
   return data;
 }
 
@@ -71,7 +83,7 @@ export async function getReservationsByStatus(token, status, filters = {}) {
   return res.json();
 }
 
-// 이미 확정된 예약을 취소 처리
+// 이미 확정된 예약을 취소 처리 (관리자용)
 export async function cancelReservation(token, id, reviewNote) {
   const res = await fetch(`${BASE}/admin/reservations/${id}/cancel`, {
     method: "PATCH",
