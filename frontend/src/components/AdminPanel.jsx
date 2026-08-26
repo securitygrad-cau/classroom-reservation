@@ -200,7 +200,7 @@ export default function AdminPanel({ adminToken, setAdminToken, onReservationCha
               {r.requesterName} ({r.affiliation}
               {r.department ? `, ${r.department}` : ""}) - {r.purpose}
               <br />
-              <span className="text-gray-500">연락처: {r.contact}</span>
+              <span className="text-gray-500">학번/내선번호: {r.contact}</span>
             </div>
             <div className="flex gap-2 shrink-0 ml-3">
               <button
@@ -315,7 +315,7 @@ export default function AdminPanel({ adminToken, setAdminToken, onReservationCha
                   {r.requesterName} ({r.affiliation}
                   {r.department ? `, ${r.department}` : ""}) - {r.purpose}
                   <br />
-                  <span className="text-gray-500">연락처: {r.contact}</span>
+                  <span className="text-gray-500">학번/내선번호: {r.contact}</span>
                 </div>
                 <div className="flex gap-2 shrink-0 ml-3">
                   <button
