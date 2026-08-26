@@ -117,6 +117,10 @@ export default function ReservationModal({ roomName, startSlot, endSlot, onSubmi
               onChange={(e) => update("cancelPassword", e.target.value)}
               placeholder="설정하면 사무실 문의 없이 본인이 직접 예약을 취소할 수 있어요"
             />
+            <p className="text-xs text-gray-400 mt-1">
+              1234, 생일 등 다른 곳에서도 흔히 쓰이는 값은 브라우저에서 유출 경고가 뜰 수 있으니,
+              다른 곳과 겹치지 않는 임의의 값을 사용해주세요.
+            </p>
           </div>
 
           <div className="flex items-start gap-2 text-xs bg-gray-50 border rounded p-3">
