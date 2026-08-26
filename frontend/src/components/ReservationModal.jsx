@@ -11,7 +11,7 @@ import { slotToTime } from "../timeSlots.js";
 export default function ReservationModal({ roomName, startSlot, endSlot, onSubmit, onClose }) {
   const [form, setForm] = useState({
     requesterName: "",
-    affiliation: "학생",
+    affiliation: "학부생",
     department: "",
     purpose: "",
     contact: "",
@@ -26,7 +26,7 @@ export default function ReservationModal({ roomName, startSlot, endSlot, onSubmi
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
-    if (!form.requesterName || !form.purpose || !form.contact) {
+    if (!form.requesterName || !form.department || !form.purpose || !form.contact) {
       setError("필수 항목을 모두 입력해주세요.");
       return;
     }
@@ -59,25 +59,26 @@ export default function ReservationModal({ roomName, startSlot, endSlot, onSubmi
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">소속/직책 *</label>
+            <label className="block text-sm font-medium mb-1">신분 *</label>
             <select
               className="w-full border rounded px-3 py-2"
               value={form.affiliation}
               onChange={(e) => update("affiliation", e.target.value)}
             >
-              <option value="학생">학생</option>
+              <option value="학부생">학부생</option>
+              <option value="대학원생">대학원생</option>
               <option value="교수">교수</option>
               <option value="교직원">교직원</option>
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">소속 학과(선택)</label>
+            <label className="block text-sm font-medium mb-1">소속 학과 *</label>
             <input
               className="w-full border rounded px-3 py-2"
               value={form.department}
               onChange={(e) => update("department", e.target.value)}
-              placeholder="예: 융합보안학과"
+              placeholder="예: 산업보안학과, 융합보안학과"
             />
           </div>
 
