@@ -15,7 +15,9 @@ export default function ReservationModal({ roomName, startSlot, endSlot, onSubmi
     department: "",
     purpose: "",
     contact: "",
+    cancelPassword: "",
   });
+  const [agreed, setAgreed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -30,6 +32,10 @@ export default function ReservationModal({ roomName, startSlot, endSlot, onSubmi
       setError("필수 항목을 모두 입력해주세요.");
       return;
     }
+    if (!agreed) {
+      setError("개인정보 보관 안내에 동의해야 예약이 가능합니다.");
+      return;
+    }
     setSubmitting(true);
     try {
       await onSubmit(form);
@@ -42,7 +48,7 @@ export default function ReservationModal({ roomName, startSlot, endSlot, onSubmi
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
         <h2 className="text-lg font-bold mb-1">강의실 예약 신청</h2>
         <p className="text-sm text-gray-500 mb-4">
           {roomName} · {slotToTime(startSlot)} ~ {slotToTime(endSlot)}
@@ -100,6 +106,31 @@ export default function ReservationModal({ roomName, startSlot, endSlot, onSubmi
               onChange={(e) => update("contact", e.target.value)}
               placeholder="예: 20231234 또는 1234"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">취소용 비밀번호 (선택)</label>
+            <input
+              type="password"
+              className="w-full border rounded px-3 py-2"
+              value={form.cancelPassword}
+              onChange={(e) => update("cancelPassword", e.target.value)}
+              placeholder="설정하면 사무실 문의 없이 본인이 직접 예약을 취소할 수 있어요"
+            />
+          </div>
+
+          <div className="flex items-start gap-2 text-xs bg-gray-50 border rounded p-3">
+            <input
+              type="checkbox"
+              id="agree"
+              checked={agreed}
+              onChange={(e) => setAgreed(e.target.checked)}
+              className="mt-0.5"
+            />
+            <label htmlFor="agree" className="text-gray-600">
+              예약 시 입력한 정보(이름, 신분, 소속 학과, 사용 목적, 학번/내선번호 등)는{" "}
+              <b>6개월간</b> 보관되며, 이후 자동으로 삭제됩니다. 이에 동의합니다. *
+            </label>
           </div>
 
           {error && <p className="text-sm text-red-500">{error}</p>}
