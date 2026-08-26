@@ -5,15 +5,17 @@ import { ALL_SLOTS, slotToTime } from "../timeSlots.js";
  * 시간표 그리드
  * - 가로축: 강의실 (rooms)
  * - 세로축: 00:00 ~ 24:00, 30분 단위 (ALL_SLOTS)
- * - 셀 클릭으로 연속 시간대 선택 → 부모(App)가 선택 상태를 관리
+ * - 빈 칸 클릭으로 연속 시간대 선택 → 부모(App)가 선택 상태를 관리
+ * - 이미 예약된(PENDING/APPROVED) 칸 클릭 → 부모(App)가 취소 모달을 띄움 (onReservedCellClick)
  *
  * props
  *  rooms: [{id, name}]
- *  reservations: [{id, roomId, startSlot, endSlot, status, requesterName, purpose, isPriority}]
+ *  reservations: [{id, roomId, startSlot, endSlot, status, requesterName, purpose, isPriority, hasCancelPassword}]
  *  selection: {roomId, startSlot, endSlot} | null
  *  onCellClick: (roomId, slot) => void
+ *  onReservedCellClick: (reservation) => void  (선택) - 예약된 칸을 클릭했을 때 호출
  */
-export default function Timetable({ rooms, reservations, selection, onCellClick }) {
+export default function Timetable({ rooms, reservations, selection, onCellClick, onReservedCellClick }) {
   // 빠른 조회를 위해 (roomId, slot) -> reservation 매핑 생성
   const cellMap = useMemo(() => {
     const map = new Map();
@@ -43,8 +45,8 @@ export default function Timetable({ rooms, reservations, selection, onCellClick 
   const cellStyle = {
     EMPTY: "bg-white hover:bg-gray-100 cursor-pointer",
     SELECTING: "bg-blue-300 cursor-pointer",
-    PENDING: "bg-yellow-200 cursor-not-allowed",
-    APPROVED: "bg-red-300 cursor-not-allowed",
+    PENDING: "bg-yellow-200 hover:bg-yellow-300 cursor-pointer",
+    APPROVED: "bg-red-300 hover:bg-red-400 cursor-pointer",
   };
 
   return (
@@ -77,13 +79,19 @@ export default function Timetable({ rooms, reservations, selection, onCellClick 
                     ? `${reservation.requesterName} (${reservation.affiliation}) - ${reservation.purpose}${
                         reservation.isPriority ? " [교수 요청]" : ""
                       }`
-                    : `${STATUS_LABEL[reservation.status] || reservation.status} - ${reservation.purpose}`
+                    : `${STATUS_LABEL[reservation.status] || reservation.status} - ${reservation.purpose} (클릭하여 취소 신청)`
                   : "클릭하여 예약 신청";
                 return (
                   <td
                     key={room.id}
                     title={title}
-                    onClick={() => (type === "EMPTY" || type === "SELECTING") && onCellClick(room.id, slot)}
+                    onClick={() => {
+                      if (type === "EMPTY" || type === "SELECTING") {
+                        onCellClick(room.id, slot);
+                      } else if ((type === "PENDING" || type === "APPROVED") && onReservedCellClick) {
+                        onReservedCellClick(reservation);
+                      }
+                    }}
                     className={`border h-6 ${cellStyle[type]}`}
                   />
                 );
